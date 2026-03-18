@@ -18,16 +18,16 @@
 
 local CONFIG = {
     -- How the ghost appears in chat
-    -- "&7" prefix hides the [AP] tag; empty brackets avoids extra text
+    -- "&7" prefix replaces [AP] with [] (best available on 3-param AP)
     ghostPrefix       = "&7",
     ghostBrackets     = "",
     ghostBracketColor = "",
     -- Messages are always whispered (sendMessageToPlayer) so only the
     -- target sees them. This cannot be disabled — the ghost is a private haunting.
 
-    -- "&7&o" = gray italic text for the message body
-    -- AP converts & codes to Minecraft formatting codes
-    formatPrefix = "&7&o",
+    -- Message text formatting prefix. Leave empty if your AP version
+    -- does not parse & codes in the message body.
+    formatPrefix = "",
 
     -- Timing (seconds)
     awakeningDelay    = {60, 150},  -- warm-up before ghost starts (min 60s for modpack loading)
