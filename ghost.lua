@@ -18,10 +18,10 @@
 
 local CONFIG = {
     -- How the ghost appears in chat
-    -- "&7" = gray, makes the prefix and brackets blend into nothing
+    -- "&7" prefix hides the [AP] tag; empty brackets avoids extra text
     ghostPrefix       = "&7",
-    ghostBrackets     = "&7",
-    ghostBracketColor = "&7",
+    ghostBrackets     = "",
+    ghostBracketColor = "",
     -- Messages are always whispered (sendMessageToPlayer) so only the
     -- target sees them. This cannot be disabled — the ghost is a private haunting.
 
