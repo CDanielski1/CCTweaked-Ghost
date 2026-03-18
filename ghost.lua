@@ -175,8 +175,8 @@ local CONFIG = {
 --  PERIPHERALS
 -- ────────────────────────────────────────────
 
-local chatBox  = peripheral.find("chatBox")
-local detector = peripheral.find("playerDetector")
+local chatBox  = peripheral.find("chatBox") or peripheral.find("chat_box")
+local detector = peripheral.find("playerDetector") or peripheral.find("player_detector") or peripheral.find("player_detector")
 
 if not chatBox then
     printError("No Chat Box found. Attach one and restart.")
@@ -187,7 +187,7 @@ if not detector then
     return
 end
 
-local envDetector = peripheral.find("environmentDetector")
+local envDetector = peripheral.find("environmentDetector") or peripheral.find("environment_detector") or peripheral.find("environment_detector")
 -- optional — ghost degrades gracefully without it
 
 -- ────────────────────────────────────────────
@@ -2973,9 +2973,9 @@ local function main()
             onTimer(eventData)
         elseif event == "peripheral_detach" then
             -- Re-find peripherals; if critical ones are gone, go dormant
-            chatBox  = peripheral.find("chatBox")
-            detector = peripheral.find("playerDetector")
-            envDetector = peripheral.find("environmentDetector")
+            chatBox  = peripheral.find("chatBox") or peripheral.find("chat_box")
+            detector = peripheral.find("playerDetector") or peripheral.find("player_detector")
+            envDetector = peripheral.find("environmentDetector") or peripheral.find("environment_detector")
             if not chatBox or not detector then
                 if state.phase ~= STATE_DORMANT then
                     deactivate(false)
@@ -2985,13 +2985,13 @@ local function main()
         elseif event == "peripheral" then
             -- Peripheral attached — try to recover
             if not chatBox then
-                chatBox = peripheral.find("chatBox")
+                chatBox = peripheral.find("chatBox") or peripheral.find("chat_box")
             end
             if not detector then
-                detector = peripheral.find("playerDetector")
+                detector = peripheral.find("playerDetector") or peripheral.find("player_detector")
             end
             if not envDetector then
-                envDetector = peripheral.find("environmentDetector")
+                envDetector = peripheral.find("environmentDetector") or peripheral.find("environment_detector")
             end
             if chatBox and detector then
                 dbg("PERIPHERALS RESTORED")
@@ -3039,16 +3039,16 @@ while restarts < MAX_RESTARTS do
     end
     sleep(5)
     -- Re-find peripherals in case they were the problem
-    chatBox  = peripheral.find("chatBox")
-    detector = peripheral.find("playerDetector")
-    envDetector = peripheral.find("environmentDetector")
+    chatBox  = peripheral.find("chatBox") or peripheral.find("chat_box")
+    detector = peripheral.find("playerDetector") or peripheral.find("player_detector")
+    envDetector = peripheral.find("environmentDetector") or peripheral.find("environment_detector")
     if not chatBox or not detector then
         printError("Missing required peripheral. Waiting...")
         while not chatBox or not detector do
             os.pullEvent("peripheral")
-            chatBox  = peripheral.find("chatBox")
-            detector = peripheral.find("playerDetector")
-            envDetector = peripheral.find("environmentDetector")
+            chatBox  = peripheral.find("chatBox") or peripheral.find("chat_box")
+            detector = peripheral.find("playerDetector") or peripheral.find("player_detector")
+            envDetector = peripheral.find("environmentDetector") or peripheral.find("environment_detector")
         end
         restarts = 0  -- reset counter after peripheral recovery
     end
