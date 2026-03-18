@@ -1308,6 +1308,13 @@ local function dbg(msg)
     end
 end
 
+-- Rolling event log: shows events and roll outcomes on the terminal
+local function log(msg)
+    if CONFIG.debug then return end  -- debug mode uses dbg() instead
+    local timeStr = textutils.formatTime(os.time(), true)
+    print(string.format("[%s] %s", timeStr, msg))
+end
+
 local function now()
     return os.epoch("utc") / 1000
 end
@@ -1743,6 +1750,7 @@ local function sendGhostMessage(text, targetPlayer, force)
     end
 
     if ok then
+        log("TX #" .. (state.messagesSent + 1))
         state.messagesSent = state.messagesSent + 1
         state.selfGuardUntil = now() + CONFIG.selfGuardTime
         -- Stutter "..." shouldn't count as a real message for timing purposes
@@ -1787,6 +1795,7 @@ local function queueMessage(text, targetPlayer, triggerType, delayRange, force)
         force       = force,
     }
 
+    log(string.format("queued [%s] %.0fs", triggerType, delay))
     dbg(string.format("queued [%s] in %.0fs: %s",
         triggerType, delay, text:sub(1, 40)))
 end
@@ -2368,6 +2377,7 @@ local function enterSilence()
     local dur = randomRange(CONFIG.silenceDuration)
     silenceTimer = os.startTimer(dur)
     dbg(string.format("entering silence for %.0fs", dur))
+    log(string.format("silence %.0fs", dur))
 end
 
 local function activate(player)
@@ -2418,6 +2428,7 @@ local function activate(player)
     sensorTimer = os.startTimer(CONFIG.sensorPollInterval)
     envTimer    = os.startTimer(CONFIG.envPollInterval)
     dbg("ACTIVATED: " .. player)
+    log("ACTIVE " .. player .. " | session start")
 
     -- Standby memory persists into the first few ambients, then fades
     -- (cleared after first use in ambient handler via a timer)
@@ -2477,6 +2488,9 @@ local function deactivate(interrupted)
     sensorTimer    = nil
     envTimer       = nil
     dbg("DEACTIVATED")
+    if prev ~= STATE_DORMANT then
+        log("DORMANT | " .. (interrupted and "interrupted" or "target left"))
+    end
     return prev ~= STATE_DORMANT
 end
 
@@ -2539,6 +2553,7 @@ local function reconcileState()
             awakeningTimer = os.startTimer(delay)
             dbg("AWAKENING: " .. players[1] .. " in " ..
                 string.format("%.0f", delay) .. "s")
+            log(string.format("awakening %s in %.0fs", players[1], delay))
         elseif state.phase == STATE_ACTIVE or state.phase == STATE_SILENCE then
             -- Verify target matches (should always match after the check above)
             if players[1] ~= state.targetPlayer then
@@ -2607,6 +2622,7 @@ local function onChat(eventData)
     if now() < state.selfGuardUntil then return end
 
     dbg("CHAT [" .. username .. "]: " .. message)
+    log("chat " .. username)
 
     -- Track chat cadence for silence detection
     state.chatCount    = (state.chatCount or 0) + 1
@@ -2614,6 +2630,7 @@ local function onChat(eventData)
 
     local response, triggerType = matchChat(message, username)
     if response then
+        log("  matched -> " .. (triggerType or "?"))
         -- Apply formatting prefix if matchChat returned raw text
         -- (echo/omniscient paths bypass formatMessage)
         if CONFIG.formatPrefix ~= "" and not response:find(CONFIG.formatPrefix, 1, true) then
@@ -2648,6 +2665,7 @@ local function onDimensionChange(eventData)
     if playerName ~= state.targetPlayer then return end
 
     dbg("DIMENSION: " .. tostring(fromDim) .. " -> " .. tostring(toDim))
+    log("dimension " .. playerName .. " -> " .. dimName(toDim))
 
     local toName   = dimName(toDim)
     local fromName = dimName(fromDim)
@@ -2686,6 +2704,7 @@ local pendingJoinLeave = {} -- timerId -> {type, player}
 local function onPlayerJoin(eventData)
     local playerName = eventData[2]
     dbg("JOIN: " .. tostring(playerName))
+    log("join " .. tostring(playerName))
     local tid = os.startTimer(3)
     pendingJoinLeave[tid] = {type = "join", player = playerName}
 end
@@ -2693,6 +2712,7 @@ end
 local function onPlayerLeave(eventData)
     local playerName = eventData[2]
     dbg("LEAVE: " .. tostring(playerName))
+    log("leave " .. tostring(playerName))
     local tid = os.startTimer(3)
     pendingJoinLeave[tid] = {type = "leave", player = playerName}
 end
@@ -2855,6 +2875,8 @@ local function onTimer(eventData)
                 if msg then
                     queueMessage(msg, state.targetPlayer, "ambient", {5, 30})
                 end
+            else
+                log("ambient roll skip")
             end
             scheduleAmbient()
         elseif state.phase == STATE_SILENCE then
@@ -2888,6 +2910,13 @@ local function onTimer(eventData)
     if timerId == pollTimer then
         pollTimer = nil
         reconcileState()
+        local phaseNames = {
+            [STATE_DORMANT] = "dormant", [STATE_AWAKENING] = "awakening",
+            [STATE_ACTIVE] = "active", [STATE_SILENCE] = "silence",
+        }
+        log("poll " .. #state.onlinePlayers .. "p "
+            .. (phaseNames[state.phase] or "?")
+            .. (state.targetPlayer and (" " .. state.targetPlayer) or ""))
         -- Prune expired message history every ~20 polls (~15 minutes)
         if math.random() < 0.05 then pruneHistory() end
         pollTimer = os.startTimer(CONFIG.pollInterval)
