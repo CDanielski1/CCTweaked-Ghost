@@ -497,8 +497,9 @@ MSG.memory = {
         {4, "you were under for a long time earlier"},
     },
     high_up = {
-        {3, "you were up high earlier"},
+        {3, "the sky almost had you earlier"},
         {4, "did you see anything from up there"},
+        {4, "you were closer to the edge than you think"},
     },
 }
 
@@ -507,9 +508,10 @@ MSG.memory = {
 -- ────────────────────────────────────────────
 
 MSG.health_low = {
-    {2, "youre hurt"},
+    {2, "careful"},
+    {2, "that looked like it hurt"},
     {3, "something got you"},
-    {3, "i can tell"},
+    {3, "i can smell it"},
     {3, "youre bleeding"},
     {4, "i can feel it when you take damage"},
     {4, "keep going"},
@@ -536,13 +538,14 @@ MSG.big_damage = {
 }
 
 MSG.underwater = {
-    {2, "breathe"},
-    {2, "how long can you hold your breath"},
+    {2, "its quiet under here"},
+    {2, "the surface is getting further away"},
     {3, "the water is dark down there"},
     {3, "somethings in the water with you"},
     {4, "the water wont let you go"},
+    {4, "the bubbles are getting smaller"},
     {5, "let go"},
-    {5, "you cant breathe"},
+    {5, "the water knows how long you have"},
 }
 
 MSG.underground = {
@@ -639,12 +642,14 @@ MSG.respawn = {
 }
 
 MSG.high_up = {
-    {2, "youre very high up"},
-    {3, "the ground is far"},
-    {3, "the wind is different up here"},
-    {4, "its a long way down {name}"},
+    {2, "the wind is different up here"},
+    {2, "everything looks small from here"},
+    {3, "the ground forgot about you"},
+    {3, "nothing to hold onto up here"},
+    {4, "one wrong step {name}"},
     {4, "i can see you from here"},
     {5, "gravity remembers"},
+    {5, "the sky is closer than the ground now"},
 }
 
 MSG.long_session = {
@@ -704,21 +709,24 @@ MSG.combo_fleeing = {
 
 MSG.afk = {
     {2, "still there"},
-    {3, "youve stopped moving"},
+    {2, "quiet"},
     {3, "are you still there"},
+    {3, "i can hear you thinking"},
     {4, "i can wait"},
-    {4, "youve been standing in the same spot for a while"},
+    {4, "good"},
     {5, "dont move"},
-    {5, "stay right there"},
+    {5, "stay right there {name}"},
 }
 
 MSG.fast_movement = {
-    {2, "youre moving fast"},
+    {2, "the world is blurring"},
     {3, "where are you going so fast"},
     {3, "slow down"},
+    {3, "something spooked you"},
     {4, "trying to get away from something"},
-    {4, "you cant fly from me"},
+    {4, "the wind doesnt cover your tracks"},
     {5, "i can keep up {name}"},
+    {5, "nothing moves that fast without a reason"},
 }
 
 MSG.sneaking = {
@@ -766,13 +774,13 @@ MSG.cross_session = {
 }
 
 MSG.cross_session_underwater = {
-    {3, "you went deep underwater last time"},
+    {3, "the water tasted different after you left last time"},
     {4, "the water remembers you"},
     {5, "the ocean kept something of yours"},
 }
 
 MSG.cross_session_high = {
-    {3, "you climbed high last time"},
+    {3, "the wind still carries your scent from last time"},
     {4, "you were above the clouds before"},
     {5, "the sky remembers how close you got"},
 }
