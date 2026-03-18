@@ -254,7 +254,11 @@ local function dimName(raw)
         if raw:find(k, 1, true) then return v end
     end
     if raw:find("nether") then return "nether" end
-    if raw:find("end")    then return "end" end
+    -- Match "end" only precisely to avoid false positives on
+    -- dimensions like "modname:enderscape" or "slender:slenderlands"
+    if raw:find("the_end") or raw:match(":end$") or raw == "end" then
+        return "end"
+    end
     return "other"
 end
 
@@ -299,6 +303,9 @@ MSG.ambient = {
     {3, "i counted the doors"},
     {3, "one of your signs says something different"},
     {3, "did you always have that many windows"},
+    {3, "one of your chests has been opened"},
+    {3, "the path looks shorter than it used to"},
+    {3, "your crops grew while you werent looking"},
     -- Level 4: knows things it shouldnt
     {4, "dont move"},
     {4, "{name}"},
@@ -313,6 +320,8 @@ MSG.ambient = {
     {4, "check the room behind you"},
     {4, "one of your walls has a hole in it"},
     {4, "look at your ceiling"},
+    {4, "your bed moved"},
+    {4, "the ladder goes one rung deeper now"},
     -- Level 5: something is wrong
     {5, "im right here"},
     {5, "dont turn around"},
@@ -325,6 +334,9 @@ MSG.ambient = {
     {5, "i built something while you were gone"},
     {5, "there are more doors than there used to be"},
     {5, "the tunnel under here goes deeper than you dug"},
+    {5, "your world seed changed"},
+    {5, "the save file knows my name"},
+    {5, "i added a room to your house"},
 }
 
 MSG.joins_alone = {
@@ -647,27 +659,39 @@ MSG.silence_break = {
 -- Combo pools: triggered during ambient when multiple sensor conditions align
 MSG.combo_cave_hurt = {
     {3, "youre going to die down here"},
+    {3, "youre bleeding and its dark"},
     {4, "nobody will find you down here"},
+    {4, "the stone will swallow everything you carried"},
     {5, "the caves will keep what you drop"},
+    {5, "they can smell the blood"},
 }
 
 MSG.combo_night_storm = {
     {3, "a storm at night"},
+    {3, "the rain sounds louder in the dark"},
     {4, "good luck hearing them over the rain"},
+    {4, "you wont hear them coming tonight"},
     {5, "the perfect night for it"},
+    {5, "thunder hides all kinds of sounds"},
 }
 
 MSG.combo_deep_dark = {
     {3, "the warden can hear you breathing"},
+    {3, "its quieter than it should be down here"},
     {4, "tread lightly"},
+    {4, "the sculk grows toward warmth"},
     {5, "something old is listening"},
+    {5, "the dark down here has teeth"},
 }
 
 MSG.combo_fleeing = {
     {3, "run"},
+    {3, "keep going"},
     {4, "faster"},
     {4, "its behind you"},
+    {4, "not fast enough"},
     {5, "you cant outrun it {name}"},
+    {5, "it knows where youre running to"},
 }
 
 MSG.afk = {
@@ -709,14 +733,20 @@ MSG.looking_around = {
 
 MSG.combo_sneak_cave = {
     {3, "it hears your footsteps anyway"},
+    {3, "the stone carries the sound further than you think"},
     {4, "the dark doesnt care if you crouch"},
+    {4, "you can hear your own heartbeat down here"},
     {5, "the warden knows where you are"},
+    {5, "it felt you crouch"},
 }
 
 MSG.combo_cave_rain = {
     {3, "the rain sounds different from down here"},
+    {3, "water is dripping through the cracks"},
     {4, "the water is seeping through the stone"},
+    {4, "the cave is filling up slowly"},
     {5, "you cant hear the storm but it can hear you"},
+    {5, "the rain finds every crack eventually"},
 }
 
 MSG.cross_session = {
@@ -727,15 +757,32 @@ MSG.cross_session = {
     {5, "every time you come back something is different"},
 }
 
+MSG.cross_session_underwater = {
+    {3, "you went deep underwater last time"},
+    {4, "the water remembers you"},
+    {5, "the ocean kept something of yours"},
+}
+
+MSG.cross_session_high = {
+    {3, "you climbed high last time"},
+    {4, "you were above the clouds before"},
+    {5, "the sky remembers how close you got"},
+}
+
 MSG.cross_session_death = {
     {3, "you died last time too"},
+    {3, "i remember your last death"},
     {4, "you die a lot here"},
+    {4, "it happened again didnt it"},
     {5, "how many lives have you spent in this world"},
+    {5, "your items are still scattered somewhere"},
 }
 
 MSG.cross_session_long = {
     {4, "you stayed a long time before"},
+    {4, "you lost track of time last time too"},
     {5, "you spent hours here last time and you came back for more"},
+    {5, "you never learn when to stop do you"},
 }
 
 MSG.chat_silence = {
@@ -762,8 +809,11 @@ MSG.looking_down = {
 -- Height + looking down: only fires when high up AND looking down
 MSG.high_lookdown = {
     {3, "its a long way down"},
+    {3, "the ground looks small from here"},
     {4, "dont fall"},
+    {4, "one step"},
     {5, "jump"},
+    {5, "let go"},
 }
 
 -- Reaction chain: ghost comments on the player's physical reaction to its messages
@@ -777,15 +827,21 @@ MSG.reaction_spin = {
 
 MSG.reaction_stopped = {
     {3, "you stopped"},
+    {3, "you felt that"},
     {4, "good"},
     {4, "stay still"},
+    {4, "hold your breath"},
     {5, "dont move {name}"},
+    {5, "freeze"},
 }
 
 MSG.reaction_ran = {
     {3, "where are you going"},
+    {3, "you moved"},
     {4, "running wont help"},
+    {4, "wrong direction"},
     {5, "i can keep up"},
+    {5, "run {name}"},
 }
 
 -- Standby-informed messages (ghost references things it watched while dormant)
@@ -815,20 +871,28 @@ MSG.standby_long_dormant = {
 MSG.ambient_nether = {
     {2, "you can hear them through the walls"},
     {2, "the lava sounds like breathing"},
+    {2, "the netherrack pulses if you watch it"},
     {3, "the nether remembers what you took"},
     {3, "something is watching from the fortress"},
+    {3, "the ghasts are crying about something"},
     {4, "youve been in here too long"},
     {4, "the portal is getting harder to find"},
+    {4, "the nether wastes are not a natural formation"},
     {5, "they know the way to your portal"},
+    {5, "something in the basalt learned your name"},
 }
 
 MSG.ambient_end = {
     {2, "the endermen wont look away"},
     {2, "the void hums"},
+    {2, "the islands float on nothing"},
     {3, "the chorus fruit grows toward you"},
+    {3, "the shulkers have been here longer than you know"},
     {4, "the end cities were not built by endermen"},
     {4, "the dragon remembers dying"},
+    {4, "you are standing on the skin of something"},
     {5, "the void is below you and above you and inside you"},
+    {5, "the end was here before the overworld"},
 }
 
 -- ────────────────────────────────────────────
@@ -1001,7 +1065,9 @@ CHAT.suspicion = {
     responses = {
         {3, "{name}"},
         {4, "does it matter"},
+        {4, "..."},
         {5, "you already know what i am"},
+        {5, "i was here before the computers"},
     },
 }
 
@@ -1085,6 +1151,7 @@ CHAT.swearing = {
     chance_mod = 0.4,
     responses = {
         {3, "{name}"},
+        {4, "language"},
         {5, "i heard that"},
     },
 }
@@ -1097,6 +1164,7 @@ CHAT.laughter = {
     chance_mod = 0.25,
     responses = {
         {4, "nothing here is funny"},
+        {5, "keep laughing"},
     },
 }
 
@@ -1209,7 +1277,9 @@ CHAT.herobrine = {
     chance_mod = 0.5,  -- but silence is still more likely
     responses = {
         {3, "dont"},
+        {4, "thats not my name"},
         {5, "stop saying that name"},
+        {5, "he was removed"},
     },
 }
 
@@ -1356,13 +1426,15 @@ end
 local function saveSession()
     if not state.targetPlayer then return end
     local data = {
-        player   = state.targetPlayer,
-        deaths   = state.sessionMemory.deaths,
-        dims     = state.sessionMemory.dimensionsVisited,
-        sent     = state.messagesSent,
-        duration = now() - state.sessionStart,
-        time     = now(),
-        wentDeep = state.sessionMemory.wentDeep,
+        player        = state.targetPlayer,
+        deaths        = state.sessionMemory.deaths,
+        dims          = state.sessionMemory.dimensionsVisited,
+        sent          = state.messagesSent,
+        duration      = now() - state.sessionStart,
+        time          = now(),
+        wentDeep      = state.sessionMemory.wentDeep,
+        wentUnderwater = state.sessionMemory.wentUnderwater,
+        wentHighUp    = state.sessionMemory.wentHighUp,
     }
     local path = sessionFileFor(state.targetPlayer)
     local f = fs.open(path, "w")
@@ -1449,6 +1521,13 @@ local function pickFromPool(pool)
     end
 
     local picked = filtered[math.random(#filtered)]
+    -- Record the RAW pool text immediately so the no-repeat filter works.
+    -- (recordSent must use the pre-format text because wasRecentlySent checks
+    -- against raw pool text, but sendGhostMessage only sees the formatted text
+    -- after {name}, %d, and formatPrefix have been applied.)
+    if player and picked then
+        recordSent(player, picked)
+    end
     return picked
 end
 
@@ -1469,7 +1548,7 @@ local function formatMessage(text, playerName)
     if text:find("{leftPlayer}") then
         local lp = standbyMemory.lastLeftPlayer
         if lp then
-            text = text:gsub("{leftPlayer}", lp)
+            text = text:gsub("{leftPlayer}", function() return lp end)
         else
             -- No left player known, skip this message
             return nil
@@ -1479,7 +1558,7 @@ local function formatMessage(text, playerName)
     -- Handle {name} placeholder
     if text:find("{name}") then
         if playerName and rollChance(CONFIG.nameChance, 2.0) then
-            text = text:gsub("{name}", playerName)
+            text = text:gsub("{name}", function() return playerName end)
         else
             text = text:gsub("%s*{name}%s*", " ")
             text = text:gsub("^%s+", ""):gsub("%s+$", "")
@@ -1516,7 +1595,7 @@ end
 
 local function normalizeChat(msg)
     return msg:lower()
-              :gsub("[^%a%s%?%!%']", " ")
+              :gsub("[^%a%d%s%?%!%'%-]", " ")
               :gsub("%s+", " ")
               :gsub("^%s+", "")
               :gsub("%s+$", "")
@@ -1657,15 +1736,10 @@ local function sendGhostMessage(text, targetPlayer, force)
             end)
         end
     else
-        ok = pcall(function()
-            chatBox.sendMessage(text, CONFIG.ghostPrefix,
-                CONFIG.ghostBrackets, CONFIG.ghostBracketColor)
-        end)
-        if not ok then
-            ok = pcall(function()
-                chatBox.sendMessage(text, CONFIG.ghostPrefix)
-            end)
-        end
+        -- No target: ghost should never broadcast publicly.
+        -- This prevents breaking the private haunting illusion.
+        dbg("DROPPED (no target): " .. text:sub(1, 30))
+        return false
     end
 
     if ok then
@@ -1673,9 +1747,12 @@ local function sendGhostMessage(text, targetPlayer, force)
         state.selfGuardUntil = now() + CONFIG.selfGuardTime
         -- Stutter "..." shouldn't count as a real message for timing purposes
         -- (prevents reaction chain from triggering on the stutter itself)
-        if text ~= "..." then
+        local isStutter = (text == "..." or text == CONFIG.formatPrefix .. "...")
+        if not isStutter then
             state.lastMessageTime = now()
-            recordSent(targetPlayer, text)
+            -- Note: message history (no-repeat) is recorded in pickFromPool using
+            -- the raw pool text, not here. Recording the formatted text here would
+            -- fail to match against raw pool entries on subsequent checks.
         end
         startCooldown()
         return true
@@ -1779,7 +1856,11 @@ local function pickAmbientMessage(player)
        and (now() - state.sessionStart) < 600 then
         for _, snippet in ipairs(standbyMemory.chatSnippets) do
             if snippet.player == player then
-                return snippet.word
+                local word = snippet.word
+                if CONFIG.formatPrefix ~= "" then
+                    word = CONFIG.formatPrefix .. word
+                end
+                return word
             end
         end
     end
@@ -1793,7 +1874,11 @@ local function pickAmbientMessage(player)
             local px = pinfo.playerX or pinfo.x
             local pz = pinfo.playerZ or pinfo.z
             if px and pz then
-                return string.format("%d %d", math.floor(px), math.floor(pz))
+                local coordMsg = string.format("%d %d", math.floor(px), math.floor(pz))
+                if CONFIG.formatPrefix ~= "" then
+                    coordMsg = CONFIG.formatPrefix .. coordMsg
+                end
+                return coordMsg
             end
         end
     end
@@ -1818,6 +1903,10 @@ local function pickAmbientMessage(player)
         elseif lastSession.duration and lastSession.duration > 3600
                and math.random() < 0.3 then
             msg = pickFromPool(MSG.cross_session_long)
+        elseif lastSession.wentUnderwater and math.random() < 0.3 then
+            msg = pickFromPool(MSG.cross_session_underwater)
+        elseif lastSession.wentHighUp and math.random() < 0.3 then
+            msg = pickFromPool(MSG.cross_session_high)
         else
             msg = pickFromPool(MSG.cross_session)
         end
@@ -1839,7 +1928,7 @@ local function pickAmbientMessage(player)
         if msg then return msg end
     end
 
-    -- 6. Default: dimension-aware ambient pool
+    -- 8. Default: dimension-aware ambient pool
     local pool = MSG.ambient
     if math.random() < 0.40 and sensorState.dimension then
         if sensorState.dimension == "nether" and MSG.ambient_nether then
@@ -2372,6 +2461,7 @@ local function deactivate(interrupted)
 
     state.phase = STATE_DORMANT
     state.targetPlayer = nil
+    state._useBecomesAlone = nil
     standbyMemory.dormantSince = now()
     -- Cancel pending messages EXCEPT last words
     local preserved = {}
@@ -2381,10 +2471,11 @@ local function deactivate(interrupted)
         end
     end
     pendingTimers = preserved
-    silenceTimer = nil
-    ambientTimer = nil
-    sensorTimer  = nil
-    envTimer     = nil
+    awakeningTimer = nil
+    silenceTimer   = nil
+    ambientTimer   = nil
+    sensorTimer    = nil
+    envTimer       = nil
     dbg("DEACTIVATED")
     return prev ~= STATE_DORMANT
 end
@@ -2433,8 +2524,8 @@ local function reconcileState()
             end
         end
         if not targetStillHere then
-            deactivate(false)  -- target left, not interrupted
             dbg("TARGET LEFT: " .. (state.targetPlayer or "?"))
+            deactivate(false)  -- target left, not interrupted
         end
     end
 
@@ -2523,6 +2614,11 @@ local function onChat(eventData)
 
     local response, triggerType = matchChat(message, username)
     if response then
+        -- Apply formatting prefix if matchChat returned raw text
+        -- (echo/omniscient paths bypass formatMessage)
+        if CONFIG.formatPrefix ~= "" and not response:find(CONFIG.formatPrefix, 1, true) then
+            response = CONFIG.formatPrefix .. response
+        end
         -- Vary delay: longer messages get more "reading time"
         local extraRead = math.min(#message * 0.2, 15)
         local adjustedDelay = {
@@ -2530,7 +2626,6 @@ local function onChat(eventData)
             CONFIG.chatDelay[2] + extraRead,
         }
         queueMessage(response, username, triggerType, adjustedDelay)
-
     end
 
     -- Track death mentions (skip if sensor already detected this death recently)
@@ -2554,12 +2649,17 @@ local function onDimensionChange(eventData)
 
     dbg("DIMENSION: " .. tostring(fromDim) .. " -> " .. tostring(toDim))
 
-    if not rollChance(CONFIG.dimensionChance) then return end
-
-    -- Pick the right pool
     local toName   = dimName(toDim)
     local fromName = dimName(fromDim)
 
+    -- Always record the dimension visit and sync sensor state,
+    -- even if the ghost decides not to speak about it
+    state.sessionMemory.dimensionsVisited[toName] = true
+    sensorState.dimension = toName
+
+    if not rollChance(CONFIG.dimensionChance) then return end
+
+    -- Pick the right pool
     local pool = MSG.dimension_other
 
     if toName == "nether" then
@@ -2579,9 +2679,6 @@ local function onDimensionChange(eventData)
         msg = formatMessage(msg, playerName)
         queueMessage(msg, playerName, "dimension", CONFIG.dimensionDelay)
     end
-
-    -- Session memory
-    state.sessionMemory.dimensionsVisited[toName] = true
 end
 
 local pendingJoinLeave = {} -- timerId -> {type, player}
@@ -2646,13 +2743,18 @@ local function onTimer(eventData)
             -- Stutter: rare "..." before the real message
             if not pending.lastWords and not pending.isStutter
                and math.random() < CONFIG.stutterChance then
-                sendGhostMessage("...", pending.target)
+                local stutter = "..."
+                if CONFIG.formatPrefix ~= "" then
+                    stutter = CONFIG.formatPrefix .. stutter
+                end
+                sendGhostMessage(stutter, pending.target)
                 local delay = 2 + math.random() * 4
                 local tid = os.startTimer(delay)
                 pendingTimers[tid] = {
                     message     = pending.message,
                     target      = pending.target,
                     triggerType = pending.triggerType,
+                    force       = pending.force,
                     isStutter   = true, -- prevent recursive stutter
                 }
                 return
@@ -2869,8 +2971,88 @@ local function main()
             onPlayerLeave(eventData)
         elseif event == "timer" then
             onTimer(eventData)
+        elseif event == "peripheral_detach" then
+            -- Re-find peripherals; if critical ones are gone, go dormant
+            chatBox  = peripheral.find("chatBox")
+            detector = peripheral.find("playerDetector")
+            envDetector = peripheral.find("environmentDetector")
+            if not chatBox or not detector then
+                if state.phase ~= STATE_DORMANT then
+                    deactivate(false)
+                end
+                dbg("PERIPHERAL LOST — waiting for reattach")
+            end
+        elseif event == "peripheral" then
+            -- Peripheral attached — try to recover
+            if not chatBox then
+                chatBox = peripheral.find("chatBox")
+            end
+            if not detector then
+                detector = peripheral.find("playerDetector")
+            end
+            if not envDetector then
+                envDetector = peripheral.find("environmentDetector")
+            end
+            if chatBox and detector then
+                dbg("PERIPHERALS RESTORED")
+                reconcileState()
+            end
         end
     end
 end
 
-main()
+-- Run with automatic restart on errors
+local MAX_RESTARTS = 10
+local restarts = 0
+while restarts < MAX_RESTARTS do
+    local ok, err = pcall(main)
+    if ok then break end  -- clean exit
+    -- Ctrl+T: respect termination, don't restart
+    if tostring(err):find("Terminated") then
+        print("Ghost terminated.")
+        break
+    end
+    restarts = restarts + 1
+    -- Reset state for clean restart (timers are dead after a crash)
+    state.phase = STATE_DORMANT
+    state.targetPlayer = nil
+    state._useBecomesAlone = nil
+    pendingTimers = {}
+    pendingJoinLeave = {}
+    awakeningTimer = nil
+    ambientTimer = nil
+    pollTimer = nil
+    silenceTimer = nil
+    sensorTimer = nil
+    envTimer = nil
+    cooldownUntil = 0
+    sensorState = {}
+    -- Display error briefly then restart
+    term.clear()
+    term.setCursorPos(1, 1)
+    if CONFIG.debug then
+        printError("Ghost error: " .. tostring(err))
+        print("Restarting (" .. restarts .. "/" .. MAX_RESTARTS .. ")...")
+    else
+        print("SrvMon v2.4.1")
+        print("Reconnecting...")
+    end
+    sleep(5)
+    -- Re-find peripherals in case they were the problem
+    chatBox  = peripheral.find("chatBox")
+    detector = peripheral.find("playerDetector")
+    envDetector = peripheral.find("environmentDetector")
+    if not chatBox or not detector then
+        printError("Missing required peripheral. Waiting...")
+        while not chatBox or not detector do
+            os.pullEvent("peripheral")
+            chatBox  = peripheral.find("chatBox")
+            detector = peripheral.find("playerDetector")
+            envDetector = peripheral.find("environmentDetector")
+        end
+        restarts = 0  -- reset counter after peripheral recovery
+    end
+end
+if restarts >= MAX_RESTARTS then
+    printError("Too many errors. Ghost stopped.")
+end
