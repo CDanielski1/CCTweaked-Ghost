@@ -18,16 +18,24 @@
 
 local CONFIG = {
     -- How the ghost appears in chat
-    -- "&7" prefix replaces [AP] with [] (best available on 3-param AP)
-    ghostPrefix       = "&7",
-    ghostBrackets     = "",
+    -- Configure AP Chat Box to use <> brackets.
+    -- The ghost dynamically picks what goes inside the brackets
+    -- based on escalation level (empty, "...", "?", player's name, etc.)
+    ghostBrackets     = "<>",
     ghostBracketColor = "",
+    -- Fallback prefix for the 3-param API (used as the "name" in brackets)
+    ghostPrefix       = "&7",
+
     -- Messages are always whispered (sendMessageToPlayer) so only the
     -- target sees them. This cannot be disabled — the ghost is a private haunting.
 
     -- Message text formatting prefix. Leave empty if your AP version
     -- does not parse & codes in the message body.
     formatPrefix = "",
+
+    -- Dynamic prefix: ghost's "identity" in brackets changes over time
+    -- Chance per message to show something in the brackets instead of empty
+    dynamicPrefixChance = 0.15,
 
     -- Timing (seconds)
     awakeningDelay    = {60, 150},  -- warm-up before ghost starts (min 60s for modpack loading)
@@ -1477,6 +1485,65 @@ local function loadSession()
 end
 
 -- ────────────────────────────────────────────
+--  DYNAMIC PREFIX (what appears inside the <> brackets)
+-- ────────────────────────────────────────────
+-- Most messages: empty brackets <>
+-- Sometimes: <...>  <?>  <player's own name>  or glitched text
+-- Escalates with session time, making the ghost feel more present
+
+local function getDynamicPrefix(targetPlayer)
+    -- Most of the time, stay anonymous
+    if math.random() > CONFIG.dynamicPrefixChance then
+        return CONFIG.ghostPrefix  -- invisible/empty
+    end
+
+    local level = 1
+    if state.phase == STATE_ACTIVE or state.phase == STATE_SILENCE then
+        local elapsed = now() - state.sessionStart
+        local ramp = CONFIG.escalationRampTime
+        if elapsed < ramp * 0.05 then level = 1
+        elseif elapsed < ramp * 0.15 then level = 2
+        elseif elapsed < ramp * 0.35 then level = 3
+        elseif elapsed < ramp * 0.65 then level = 4
+        else level = 5 end
+    end
+
+    -- Level 1-2: subtle fragments
+    if level <= 2 then
+        local opts = {"...", ".", " "}
+        return opts[math.random(#opts)]
+    end
+
+    -- Level 3: more present
+    if level == 3 then
+        local opts = {"...", "?", "???", " "}
+        return opts[math.random(#opts)]
+    end
+
+    -- Level 4: identity games
+    if level == 4 then
+        local r = math.random()
+        if r < 0.25 and targetPlayer then
+            return targetPlayer  -- USE THEIR NAME (terrifying)
+        end
+        local opts = {"...", "?", "no", "here", "close"}
+        return opts[math.random(#opts)]
+    end
+
+    -- Level 5: unhinged
+    local r = math.random()
+    if r < 0.30 and targetPlayer then
+        return targetPlayer  -- their own name, more often
+    elseif r < 0.40 then
+        -- Garbled: random fragment
+        local glitch = {"&k??&r", "you", "me", "run", "help", "stop"}
+        return glitch[math.random(#glitch)]
+    end
+    local opts = {"...", "behind you", "inside", "watching"}
+    return opts[math.random(#opts)]
+end
+
+-- ────────────────────────────────────────────
 --  MESSAGE SELECTION
 -- ────────────────────────────────────────────
 
@@ -1718,23 +1785,26 @@ local function sendGhostMessage(text, targetPlayer, force)
         return false
     end
 
-    dbg("SEND -> " .. (targetPlayer or "all") .. ": " .. text)
+    -- Pick dynamic prefix for this message (what appears inside <> brackets)
+    local prefix = getDynamicPrefix(targetPlayer)
+
+    dbg("SEND -> " .. (targetPlayer or "all") .. " <" .. prefix .. ">: " .. text)
 
     local ok = false
     -- Always whisper when we have a target — the ghost is a private haunting
     if targetPlayer then
-        -- Try new AP API first, then old
+        -- Try new AP API first (5 params), then 3-param, then 2-param
         ok = pcall(function()
             chatBox.sendMessageToPlayer(
                 text, targetPlayer,
-                CONFIG.ghostPrefix,
+                prefix,
                 CONFIG.ghostBrackets,
                 CONFIG.ghostBracketColor
             )
         end)
         if not ok then
             ok = pcall(function()
-                chatBox.sendMessageToPlayer(text, targetPlayer, CONFIG.ghostPrefix)
+                chatBox.sendMessageToPlayer(text, targetPlayer, prefix)
             end)
         end
         if not ok then
